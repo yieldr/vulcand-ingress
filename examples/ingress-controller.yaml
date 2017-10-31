@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: vulcand-ingress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vulcand-ingress
+  template:
+    metadata:
+      labels:
+        app: vulcand-ingress
+    spec:
+      containers:
+
+      - name: vulcand
+        image: yieldr/vulcand
+        command:
+        - /vulcand
+        - -logSeverity=DEBUG
+        - -port=8181
+        - -apiInterface=0.0.0.0
+        - -apiPort=8182
+        - -etcd=http://localhost:2379
+        - -etcdKey=/vulcand.io
+
+      - name: vulcand-ingress
+        image: yieldr/vulcand-ingress
+
+      - name: etcd
+        image: quay.io/coreos/etcd
+        command:
+        - etcd
+        - -listen-client-urls=http://0.0.0.0:2379
+        - -advertise-client-urls=http://0.0.0.0:2379

@@ -1,0 +1,48 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: vulcand-ingress
+  annotations:
+    ingress.kubernetes.io/pass-host-header: "true"
+    ingress.kubernetes.io/trust-forward-headers: "true"
+    ingress.kubernetes.io/read-timeout: "5s"
+    ingress.kubernetes.io/dial-timeout: "5s"
+    ingress.kubernetes.io/tls-handshake-timeout: "10s"
+    ingress.kubernetes.io/keepalive: "30s"
+    ingress.kubernetes.io/max-idle-connections-per-host: "12"
+    ingress.kubernetes.io/middleware.cbreaker: |
+      {
+        "Domain": "yieldr.eu.auth0.com",
+        "ClientID": "xxx",
+        "ClientSecret": "yyy",
+        "RedirectURL": ""
+      }
+spec:
+  backend:
+    serviceName: default
+    servicePort: 80
+  rules:
+  - http:
+      paths:
+      - path: /foo
+        backend:
+          serviceName: foo
+          servicePort: 80
+      - path: /bar
+        backend:
+          serviceName: bar
+          servicePort: 80
+  - host: example.com
+    http:
+      paths:
+      - path: /foo
+        backend:
+          serviceName: foo
+          servicePort: 80
+  - host: foo.example.com
+    http:
+      paths:
+      - path: /bar
+        backend:
+          serviceName: bar
+          servicePort: 80
