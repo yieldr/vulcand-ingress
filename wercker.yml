@@ -11,7 +11,11 @@ build:
     - script:
         name: go test
         code: |
-          go test
+          make test
+    - script:
+        name: go vet
+        code: |
+          make vet
     - script:
         name: copy binaries
         code: |
