@@ -3,35 +3,29 @@ kind: Ingress
 metadata:
   name: vulcand-ingress
   annotations:
-    ingress.kubernetes.io/pass-host-header: "true"
     ingress.kubernetes.io/trust-forward-headers: "true"
     ingress.kubernetes.io/read-timeout: "5s"
     ingress.kubernetes.io/dial-timeout: "5s"
     ingress.kubernetes.io/tls-handshake-timeout: "10s"
     ingress.kubernetes.io/keepalive: "30s"
     ingress.kubernetes.io/max-idle-connections-per-host: "12"
-    ingress.kubernetes.io/middleware.cbreaker: |
+    ingress.kubernetes.io/middleware.ratelimit: |
       {
-        "Domain": "yieldr.eu.auth0.com",
-        "ClientID": "xxx",
-        "ClientSecret": "yyy",
-        "RedirectURL": ""
+        "PeriodSeconds": 1,
+        "Burst": 3,
+        "Variable": "client.ip",
+        "Requests": 1
+      }
+    ingress.kubernetes.io/middleware.connlimit: |
+      {
+        "Connections": 3,
+        "Variable": "client.ip"
       }
 spec:
   backend:
     serviceName: default
     servicePort: 80
   rules:
-  - http:
-      paths:
-      - path: /foo
-        backend:
-          serviceName: foo
-          servicePort: 80
-      - path: /bar
-        backend:
-          serviceName: bar
-          servicePort: 80
   - host: example.com
     http:
       paths:
@@ -39,10 +33,16 @@ spec:
         backend:
           serviceName: foo
           servicePort: 80
-  - host: foo.example.com
+  - host: bar.example.com
     http:
       paths:
       - path: /bar
         backend:
           serviceName: bar
+          servicePort: 80
+  - http:
+      paths:
+      - path: /baz.*
+        backend:
+          serviceName: baz
           servicePort: 80

@@ -1,22 +1,21 @@
 package vulcan
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 )
 
 func CreateRoute(host, path string) string {
-	var b bytes.Buffer
-	var and bool
+
+	exp := make([]string, 0, 2)
+
 	if host != "" {
-		fmt.Fprintf(&b, "Host(`%s`)", host)
-		and = true
+		exp = append(exp, fmt.Sprintf("Host(`%s`)", host))
 	}
+
 	if path != "" {
-		if and {
-			fmt.Fprint(&b, " && ")
-		}
-		fmt.Fprintf(&b, "PathRegexp(`%s`)", path)
+		exp = append(exp, fmt.Sprintf("PathRegexp(`%s`)", path))
 	}
-	return b.String()
+
+	return strings.Join(exp, " && ")
 }

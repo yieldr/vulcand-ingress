@@ -63,6 +63,7 @@ func (c *Controller) syncToVulcan(key string) error {
 	}
 
 	logger := log.WithField("ingress", key)
+	logger.Info("Ingress has been modified")
 
 	if !exists {
 		// Clean up all the entries in vulcan that relate to this ingress
@@ -78,19 +79,14 @@ func (c *Controller) syncToVulcan(key string) error {
 		ns := split[0]
 		name := split[1]
 
-		log.Debug("Deleting vulcan backend")
-		if err := c.vulcan.DeleteBackend(ns, name); err != nil {
-			log.WithError(err).Error("Failed deleting vulcan backend")
-		}
-
 		log.Debug("Deleting vulcan frontend")
 		if err := c.vulcan.DeleteFrontend(ns, name); err != nil {
 			log.WithError(err).Error("Failed deleting vulcan frontend")
 		}
 
-		log.Debug("Deleting vulcan server")
-		if err := c.vulcan.DeleteServer(ns, name); err != nil {
-			log.WithError(err).Error("Failed deleting vulcan server")
+		log.Debug("Deleting vulcan backend")
+		if err := c.vulcan.DeleteBackend(ns, name); err != nil {
+			log.WithError(err).Error("Failed deleting vulcan backend")
 		}
 
 	} else {
@@ -106,11 +102,10 @@ func (c *Controller) syncToVulcan(key string) error {
 		logger.WithFields(log.Fields{
 			"service": backend.ServiceName,
 			"port":    backend.ServicePort.String(),
-		}).Print("Syncing default ingress backend")
+		}).Debug("Syncing default ingress backend")
 
 		c.vulcan.SyncBackend(ingress, backend)
-		c.vulcan.SyncFrontend(ingress, backend, "", "")
-		c.vulcan.SyncServer(ingress, backend)
+		c.vulcan.SyncFrontend(ingress, backend, "", "/")
 
 		for _, rule := range ingress.Spec.Rules {
 
@@ -133,13 +128,8 @@ func (c *Controller) syncToVulcan(key string) error {
 					logger.WithError(err).Error("Failed creating vulcan frontend")
 				}
 
-				logger.Debug("Creating vulcan server")
-				if err := c.vulcan.SyncServer(ingress, &path.Backend); err != nil {
-					logger.WithError(err).Error("Failed creating vulcan server")
-				}
-
 				logger.Debug("Creating vulcan middleware")
-				if err := c.vulcan.SyncMiddleware(ingress, backend); err != nil {
+				if err := c.vulcan.SyncMiddleware(ingress, &path.Backend); err != nil {
 					logger.WithError(err).Error("Failed creating vulcan middleware")
 				}
 			}
