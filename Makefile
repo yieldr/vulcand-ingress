@@ -10,7 +10,7 @@ OS ?= darwin
 ARCH ?= amd64
 
 build:
-	@CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) go build -o bin/vulcand-ingress-$(OS)-$(ARCH) -a -tags netgo -ldflags $(LDFLAGS)
+	@CGO_ENABLED=0 GOOS=$(OS) GOARCH=$(ARCH) go build -o bin/vulcand-ingress -a -tags netgo -ldflags $(LDFLAGS)
 
 test:
 	@go test $(PKGS)

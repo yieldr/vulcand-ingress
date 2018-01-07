@@ -1,3 +1,3 @@
 FROM debian
-COPY bin/vulcand-ingress-linux-amd64 /usr/local/bin/vulcand-ingress
+ADD bin/vulcand-ingress /usr/local/bin
 CMD ["vulcand-ingress"]

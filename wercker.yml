@@ -35,8 +35,7 @@ release:
     - internal/docker-scratch-push:
         username: $REGISTRY_USERNAME
         password: $REGISTRY_PASSWORD
-        repository: yieldr/vulcand
-        cmd: /vulcand
+        repository: yieldr/vulcand-ingress
+        cmd: /vulcand-ingress
         tag: $TAG
-        ports: 8181,8182
         author: $WERCKER_STARTED_BY
