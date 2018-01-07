@@ -13,6 +13,7 @@ import (
 
 	"github.com/yieldr/vulcand-ingress/pkg/kubernetes"
 	"github.com/yieldr/vulcand-ingress/pkg/kubernetes/ingress"
+	"github.com/yieldr/vulcand-ingress/pkg/version"
 	"github.com/yieldr/vulcand-ingress/pkg/vulcan"
 )
 
@@ -21,7 +22,8 @@ var cmdRoot = &cobra.Command{
 	Short: "vulcand ingress controller",
 	Long: `Vulcand Ingress is a Kubernetes Ingress Controller for the Vulcand
 reverse proxy.`,
-	Run: runRoot,
+	Run:     runRoot,
+	Version: version.Version,
 }
 
 func runRoot(cmd *cobra.Command, args []string) {

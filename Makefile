@@ -24,7 +24,6 @@ vet:
 docker-image:
 	@docker build -t $(IMAGE):$(VERSION) .
 	@docker tag $(IMAGE):$(VERSION) $(IMAGE):latest
-	@echo " ---> $(IMAGE):$(VERSION)\n ---> $(IMAGE):latest"
 
 docker-push:
 	@docker push $(IMAGE):$(VERSION)
