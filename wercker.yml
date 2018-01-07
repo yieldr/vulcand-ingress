@@ -3,7 +3,7 @@ box: golang
 build:
   steps:
     - setup-go-workspace:
-        package-dir: github.com/yieldr/vulcand
+        package-dir: github.com/yieldr/vulcand-ingress
     - script:
         name: go build
         code: |

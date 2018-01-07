@@ -1,4 +1,4 @@
-VERSION ?= $(shell git describe --tags)
+VERSION ?= $(shell git describe --tags --always)
 
 IMAGE = yieldr/vulcand-ingress
 PKG = github.com/yieldr/vulcand-ingress
