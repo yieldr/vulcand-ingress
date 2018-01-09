@@ -551,6 +551,12 @@
 			"revisionTime": "2017-09-30T15:01:53Z"
 		},
 		{
+			"checksumSHA1": "NWjXyKfv0RoUL64yGRztKP+X1hM=",
+			"path": "github.com/yieldr/vulcand",
+			"revision": "4a11eff10bdbe6aed63b0095eac6cd19d0eb11f7",
+			"revisionTime": "2018-01-09T15:13:38Z"
+		},
+		{
 			"checksumSHA1": "Wz5nnEADJ88wq9bcz+dN1Qr6Vc8=",
 			"path": "github.com/yieldr/vulcand/pkg/cache",
 			"revision": "b90d09167042b5e3983ba74e5c9882e1cdf96f2d",
