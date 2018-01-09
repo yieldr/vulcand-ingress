@@ -194,6 +194,13 @@
 			"revisionTime": "2017-10-08T13:42:43Z"
 		},
 		{
+			"checksumSHA1": "t1nayUUugNoJWht7p4cbKyWuk8Q=",
+			"origin": "github.com/yieldr/vulcand/vendor/github.com/gorilla/handlers",
+			"path": "github.com/gorilla/handlers",
+			"revision": "4a11eff10bdbe6aed63b0095eac6cd19d0eb11f7",
+			"revisionTime": "2018-01-09T15:13:38Z"
+		},
+		{
 			"checksumSHA1": "urMd7A9QPAJYY0GZJL9qBhlUmD8=",
 			"origin": "github.com/vulcand/vulcand/vendor/github.com/gorilla/mux",
 			"path": "github.com/gorilla/mux",
@@ -551,34 +558,28 @@
 			"revisionTime": "2017-09-30T15:01:53Z"
 		},
 		{
-			"checksumSHA1": "NWjXyKfv0RoUL64yGRztKP+X1hM=",
-			"path": "github.com/yieldr/vulcand",
+			"checksumSHA1": "Wz5nnEADJ88wq9bcz+dN1Qr6Vc8=",
+			"path": "github.com/yieldr/vulcand/pkg/cache",
 			"revision": "4a11eff10bdbe6aed63b0095eac6cd19d0eb11f7",
 			"revisionTime": "2018-01-09T15:13:38Z"
 		},
 		{
-			"checksumSHA1": "Wz5nnEADJ88wq9bcz+dN1Qr6Vc8=",
-			"path": "github.com/yieldr/vulcand/pkg/cache",
-			"revision": "b90d09167042b5e3983ba74e5c9882e1cdf96f2d",
-			"revisionTime": "2017-10-08T13:42:43Z"
-		},
-		{
 			"checksumSHA1": "Nrb2pYk7e886D2PaMdBB5fTIuGo=",
 			"path": "github.com/yieldr/vulcand/plugin/auth",
-			"revision": "b90d09167042b5e3983ba74e5c9882e1cdf96f2d",
-			"revisionTime": "2017-10-08T13:42:43Z"
+			"revision": "4a11eff10bdbe6aed63b0095eac6cd19d0eb11f7",
+			"revisionTime": "2018-01-09T15:13:38Z"
 		},
 		{
-			"checksumSHA1": "Gg1Yzz4Sa8snSjWPwUetX1fSVh0=",
+			"checksumSHA1": "nenUEhgTucr/NutyOASSUh7V5Nw=",
 			"path": "github.com/yieldr/vulcand/plugin/oauth2",
-			"revision": "b90d09167042b5e3983ba74e5c9882e1cdf96f2d",
-			"revisionTime": "2017-10-08T13:42:43Z"
+			"revision": "4a11eff10bdbe6aed63b0095eac6cd19d0eb11f7",
+			"revisionTime": "2018-01-09T15:13:38Z"
 		},
 		{
 			"checksumSHA1": "Jhf7eaLHfEyCKY+Dl2CGljs1RhE=",
 			"path": "github.com/yieldr/vulcand/registry",
-			"revision": "b90d09167042b5e3983ba74e5c9882e1cdf96f2d",
-			"revisionTime": "2017-10-08T13:42:43Z"
+			"revision": "4a11eff10bdbe6aed63b0095eac6cd19d0eb11f7",
+			"revisionTime": "2018-01-09T15:13:38Z"
 		},
 		{
 			"checksumSHA1": "P1AWkyOoy5SxjtZxwTB+mhKd0tg=",
