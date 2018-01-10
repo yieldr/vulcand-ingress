@@ -8,7 +8,7 @@ import (
 
 func CreateURL(ingress *v1beta1.Ingress, backend *v1beta1.IngressBackend) string {
 	return fmt.Sprintf("http://%s.%s:%s",
-		ingress.Namespace,
 		backend.ServiceName,
+		ingress.Namespace,
 		backend.ServicePort.String())
 }

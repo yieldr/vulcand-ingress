@@ -16,11 +16,11 @@ func TestCreateURL(t *testing.T) {
 		},
 	}
 	for expected, backend := range map[string]*v1beta1.IngressBackend{
-		"http://namespace.foo:80": &v1beta1.IngressBackend{
+		"http://foo.namespace:80": &v1beta1.IngressBackend{
 			ServiceName: "foo",
 			ServicePort: intstr.FromInt(80),
 		},
-		"http://namespace.bar:443": &v1beta1.IngressBackend{
+		"http://bar.namespace:443": &v1beta1.IngressBackend{
 			ServiceName: "bar",
 			ServicePort: intstr.FromString("443"),
 		},
