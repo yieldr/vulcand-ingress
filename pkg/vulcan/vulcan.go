@@ -85,7 +85,7 @@ func (c *Client) SyncBackend(ingress *v1beta1.Ingress, backend *v1beta1.IngressB
 
 	return c.UpsertServer(
 		engine.BackendKey{Id: CreateID(ingress, backend)},
-		engine.Server{Id: CreateID(ingress, backend), URL: CreateURL(backend)},
+		engine.Server{Id: CreateID(ingress, backend), URL: CreateURL(ingress, backend)},
 		time.Duration(0),
 	)
 }
