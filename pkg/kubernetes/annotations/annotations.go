@@ -16,7 +16,8 @@ const (
 	MaxIdleConnsPerHost = "ingress.kubernetes.io/max-idle-connections-per-host"
 
 	// Frontend related annotations
-	TrustForwardHeader = "ingress.kubernetes.io/trust-forward-headers"
+	TrustForwardHeader = "ingress.kubernetes.io/trust-forward-header"
+	PassHostHeader     = "ingress.kubernetes.io/pass-host-header"
 	MaxBodyBytes       = "ingress.kubernetes.io/max-body-bytes"
 	MaxMemBodyBytes    = "ingress.kubernetes.io/max-mem-body-bytes"
 	FailoverPredicate  = "ingress.kubernetes.io/failover-predicate"

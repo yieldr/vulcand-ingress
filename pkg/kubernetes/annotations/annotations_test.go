@@ -9,6 +9,7 @@ import (
 func TestGetString(t *testing.T) {
 
 	annotations := map[string]string{
+		PassHostHeader:      "false",
 		TrustForwardHeader:  "true",
 		ReadTimeout:         "5s",
 		DialTimeout:         "7s",

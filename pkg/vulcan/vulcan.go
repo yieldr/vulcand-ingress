@@ -29,13 +29,14 @@ func (c *Client) SyncFrontend(ingress *v1beta1.Ingress, backend *v1beta1.Ingress
 		Type:      engine.HTTP,
 		Route:     CreateRoute(host, path),
 		Settings: &engine.HTTPFrontendSettings{
+			Hostname:           annotations.GetString(ingress, annotations.Hostname),
+			PassHostHeader:     annotations.GetBool(ingress, annotations.PassHostHeader),
+			TrustForwardHeader: annotations.GetBool(ingress, annotations.TrustForwardHeader),
+			FailoverPredicate:  annotations.GetString(ingress, annotations.FailoverPredicate),
 			Limits: engine.HTTPFrontendLimits{
 				MaxBodyBytes:    int64(annotations.GetInt(ingress, annotations.MaxBodyBytes)),
 				MaxMemBodyBytes: int64(annotations.GetInt(ingress, annotations.MaxMemBodyBytes)),
 			},
-			FailoverPredicate:  annotations.GetString(ingress, annotations.FailoverPredicate),
-			Hostname:           annotations.GetString(ingress, annotations.Hostname),
-			TrustForwardHeader: annotations.GetBool(ingress, annotations.TrustForwardHeader),
 		},
 	}, time.Duration(0))
 }

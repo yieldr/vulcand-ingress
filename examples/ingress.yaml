@@ -3,7 +3,8 @@ kind: Ingress
 metadata:
   name: vulcand-ingress
   annotations:
-    ingress.kubernetes.io/trust-forward-headers: "true"
+    ingress.kubernetes.io/pass-host-header: "true"
+    ingress.kubernetes.io/trust-forward-header: "true"
     ingress.kubernetes.io/read-timeout: "5s"
     ingress.kubernetes.io/dial-timeout: "5s"
     ingress.kubernetes.io/tls-handshake-timeout: "10s"
