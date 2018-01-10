@@ -97,15 +97,16 @@ func (c *Controller) syncToVulcan(key string) error {
 
 		// First we sync the ingresses default backend. This is a fallback
 		// backend which will receive traffic if nothing else matches.
-		backend := ingress.Spec.Backend
+		if backend := ingress.Spec.Backend; backend != nil {
 
-		logger.WithFields(log.Fields{
-			"service": backend.ServiceName,
-			"port":    backend.ServicePort.String(),
-		}).Debug("Syncing default ingress backend")
+			logger.WithFields(log.Fields{
+				"service": backend.ServiceName,
+				"port":    backend.ServicePort.String(),
+			}).Debug("Syncing default ingress backend")
 
-		c.vulcan.SyncBackend(ingress, backend)
-		c.vulcan.SyncFrontend(ingress, backend, "", "/")
+			c.vulcan.SyncBackend(ingress, backend)
+			c.vulcan.SyncFrontend(ingress, backend, "", "")
+		}
 
 		for _, rule := range ingress.Spec.Rules {
 
