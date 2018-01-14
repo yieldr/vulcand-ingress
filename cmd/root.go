@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/yieldr/vulcand-ingress/pkg/kubernetes"
@@ -79,7 +80,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 		resourceHandler,
 		cache.Indexers{})
 
-	controller := ingress.NewController(queue, indexer, informer, vulcan)
+	logger := logrus.New()
+
+	controller := ingress.NewController(queue, indexer, informer, vulcan, logger)
 
 	stop := make(chan struct{})
 	defer close(stop)

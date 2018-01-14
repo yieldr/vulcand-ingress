@@ -1,11 +1,10 @@
 package ingress
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -13,6 +12,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
+	"github.com/sirupsen/logrus"
 	"github.com/yieldr/vulcand-ingress/pkg/vulcan"
 )
 
@@ -21,14 +21,22 @@ type Controller struct {
 	queue    workqueue.RateLimitingInterface
 	informer cache.Controller
 	vulcan   *vulcan.Client
+	logger   *logrus.Logger
 }
 
-func NewController(queue workqueue.RateLimitingInterface, indexer cache.Indexer, informer cache.Controller, vulcan *vulcan.Client) *Controller {
+func NewController(
+	queue workqueue.RateLimitingInterface,
+	indexer cache.Indexer,
+	informer cache.Controller,
+	vulcan *vulcan.Client,
+	logger *logrus.Logger) *Controller {
+
 	return &Controller{
 		informer: informer,
 		indexer:  indexer,
 		queue:    queue,
 		vulcan:   vulcan,
+		logger:   logger,
 	}
 }
 
@@ -44,7 +52,7 @@ func (c *Controller) processNextItem() bool {
 	defer c.queue.Done(key)
 
 	// Invoke the method containing the business logic.
-	err := c.syncToVulcan(key.(string))
+	err := c.apply(key.(string))
 
 	// Handle the error if something went wrong during the execution of the
 	// business logic.
@@ -52,90 +60,112 @@ func (c *Controller) processNextItem() bool {
 	return true
 }
 
-// syncToVulcan is the business logic of the controller. In this controller it
-// simply prints information about the pod to stdout. In case an error happened,
-// it has to simply return the error. The retry logic should not be part of the
-// business logic.
-func (c *Controller) syncToVulcan(key string) error {
+// apply is the business logic of the controller. In this controller. In case an
+// error happened, it has to simply return the error. The retry logic should not
+// be part of the business logic.
+func (c *Controller) apply(key string) error {
 	item, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
 		return err
 	}
-
-	logger := log.WithField("ingress", key)
-	logger.Info("Ingress has been modified")
-
 	if !exists {
-		// Clean up all the entries in vulcan that relate to this ingress
-		// resource.
-		logger.Print("Ingress does not exist anymore")
+		return c.remove(key)
+	}
+	return c.upsert(item, key)
+}
 
-		split := strings.Split(key, "/")
-		if len(split) < 2 {
-			logger.WithError(err).Printf("Key split failed for key %s", key)
+func (c *Controller) remove(key string) error {
+
+	logger := c.logger.WithField("ingress", key)
+	logger.Info("Ingress has been removed")
+
+	split := strings.Split(key, "/")
+	if len(split) < 2 {
+		err := errors.New("Failed to split key %s in the format <ns>/<name>")
+		logger.WithError(err).Error("Failed deleting ingress")
+		return err
+	}
+
+	ns := split[0]
+	name := split[1]
+
+	// Clean up all the entries in vulcan that relate to this ingress
+	// resource.
+	logger.Debug("Deleting vulcan frontend")
+	if err := c.vulcan.DeleteFrontend(ns, name); err != nil {
+		logger.WithError(err).Error("Failed deleting vulcan frontend")
+		return err
+	}
+
+	logger.Debug("Deleting vulcan backend")
+	if err := c.vulcan.DeleteBackend(ns, name); err != nil {
+		logger.WithError(err).Error("Failed deleting vulcan backend")
+		return err
+	}
+
+	return nil
+}
+
+func (c *Controller) upsert(item interface{}, key string) error {
+	// Note that you also have to check the uid if you have a local
+	// controlled resource, which is dependent on the actual instance, to
+	// detect that a Ingress was recreated with the same name.
+	ingress := item.(*v1beta1.Ingress)
+
+	// First we sync the ingresses default backend. This is a fallback backend
+	// which should receive traffic if no other request matches.
+	if backend := ingress.Spec.Backend; backend != nil {
+
+		logger := c.logger.WithFields(logrus.Fields{
+			"service": backend.ServiceName,
+			"port":    backend.ServicePort.String(),
+		})
+		logger.Debug("Syncing default ingress backend")
+
+		logger.Debug("Creating vulcan backend")
+		if err := c.vulcan.SyncBackend(ingress, backend); err != nil {
+			logger.WithError(err).Error("Failed creating vulcan backend")
 			return err
 		}
 
-		ns := split[0]
-		name := split[1]
-
-		log.Debug("Deleting vulcan frontend")
-		if err := c.vulcan.DeleteFrontend(ns, name); err != nil {
-			log.WithError(err).Error("Failed deleting vulcan frontend")
+		logger.Debug("Creating vulcan frontend")
+		if err := c.vulcan.SyncFrontend(ingress, backend, "", ""); err != nil {
+			logger.WithError(err).Error("Failed creating vulcan frontend")
+			return err
 		}
+	}
 
-		log.Debug("Deleting vulcan backend")
-		if err := c.vulcan.DeleteBackend(ns, name); err != nil {
-			log.WithError(err).Error("Failed deleting vulcan backend")
-		}
+	for _, rule := range ingress.Spec.Rules {
 
-	} else {
-		// Note that you also have to check the uid if you have a local
-		// controlled resource, which is dependent on the actual instance, to
-		// detect that a Ingress was recreated with the same name.
-		ingress := item.(*v1beta1.Ingress)
+		for _, path := range rule.HTTP.Paths {
 
-		// First we sync the ingresses default backend. This is a fallback
-		// backend which will receive traffic if nothing else matches.
-		if backend := ingress.Spec.Backend; backend != nil {
+			logger := c.logger.WithFields(logrus.Fields{
+				"host":    rule.Host,
+				"path":    path.Path,
+				"service": path.Backend.ServiceName,
+				"port":    path.Backend.ServicePort.String(),
+			})
 
-			logger.WithFields(log.Fields{
-				"service": backend.ServiceName,
-				"port":    backend.ServicePort.String(),
-			}).Debug("Syncing default ingress backend")
+			logger.Debug("Creating vulcan backend")
+			if err := c.vulcan.SyncBackend(ingress, &path.Backend); err != nil {
+				logger.WithError(err).Error("Failed creating vulcan backend")
+				return err
+			}
 
-			c.vulcan.SyncBackend(ingress, backend)
-			c.vulcan.SyncFrontend(ingress, backend, "", "")
-		}
+			logger.Debug("Creating vulcan frontend")
+			if err := c.vulcan.SyncFrontend(ingress, &path.Backend, rule.Host, path.Path); err != nil {
+				logger.WithError(err).Error("Failed creating vulcan frontend")
+				return err
+			}
 
-		for _, rule := range ingress.Spec.Rules {
-
-			for _, path := range rule.HTTP.Paths {
-
-				logger = logger.WithFields(log.Fields{
-					"host":    rule.Host,
-					"path":    path.Path,
-					"service": path.Backend.ServiceName,
-					"port":    path.Backend.ServicePort.String(),
-				})
-
-				logger.Debug("Creating vulcan backend")
-				if err := c.vulcan.SyncBackend(ingress, &path.Backend); err != nil {
-					logger.WithError(err).Error("Failed creating vulcan backend")
-				}
-
-				logger.Debug("Creating vulcan frontend")
-				if err := c.vulcan.SyncFrontend(ingress, &path.Backend, rule.Host, path.Path); err != nil {
-					logger.WithError(err).Error("Failed creating vulcan frontend")
-				}
-
-				logger.Debug("Creating vulcan middleware")
-				if err := c.vulcan.SyncMiddleware(ingress, &path.Backend); err != nil {
-					logger.WithError(err).Error("Failed creating vulcan middleware")
-				}
+			logger.Debug("Creating vulcan middleware")
+			if err := c.vulcan.SyncMiddleware(ingress, &path.Backend); err != nil {
+				logger.WithError(err).Error("Failed creating vulcan middleware")
+				return err
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -153,7 +183,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	// This controller retries 5 times if something goes wrong. After that, it
 	// stops trying.
 	if c.queue.NumRequeues(key) < 5 {
-		log.Infof("Error syncing ingress %v: %v", key, err)
+		c.logger.Infof("Error syncing ingress %v: %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later
@@ -166,7 +196,7 @@ func (c *Controller) handleErr(err error, key interface{}) {
 	// Report to an external entity that, even after several retries, we could
 	// not successfully process this key.
 	runtime.HandleError(err)
-	log.Infof("Dropping ingress %q out of the queue: %v", key, err)
+	c.logger.Infof("Dropping ingress %q out of the queue: %v", key, err)
 }
 
 func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
@@ -174,7 +204,7 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 
 	// Let the workers stop when we are done
 	defer c.queue.ShutDown()
-	log.Info("Starting ingress controller")
+	c.logger.Info("Starting ingress controller")
 
 	go c.informer.Run(stopCh)
 
@@ -190,7 +220,7 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 	}
 
 	<-stopCh
-	log.Info("Stopping ingress controller")
+	c.logger.Info("Stopping ingress controller")
 }
 
 func (c *Controller) runWorker() {
