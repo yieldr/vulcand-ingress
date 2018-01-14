@@ -10,26 +10,34 @@ import (
 
 var cmdDoc = &cobra.Command{
 	Use:   "doc",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: runDoc,
+	Short: "Generates cli documentation",
+	Run:   runDoc,
 }
 
 func runDoc(cmd *cobra.Command, args []string) {
 
-	err := doc.GenMarkdownTree(cmdRoot, "doc")
+	dir, _ := cmd.Flags().GetString("dir")
+	format, _ := cmd.Flags().GetString("format")
+
+	var err error
+
+	switch format {
+	case "markdown":
+		err = doc.GenMarkdownTree(cmdRoot, dir)
+	case "rest":
+		err = doc.GenReSTTree(cmdRoot, dir)
+	case "man":
+		err = doc.GenManTree(cmdRoot, &doc.GenManHeader{}, dir)
+	}
+
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(-2)
+		os.Exit(1)
 	}
 }
 
 func init() {
 	cmdRoot.AddCommand(cmdDoc)
-	cmdDoc.Flags().StringP("dir", "d", "doc", "directory in which to generate documentation")
+	cmdDoc.Flags().StringP("dir", "d", "doc", "Directory in which to generate documentation")
+	cmdDoc.Flags().StringP("format", "f", "markdown", "Format in which to generate documentation")
 }
